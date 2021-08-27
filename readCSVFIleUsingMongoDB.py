@@ -11,7 +11,7 @@ class readCSVFile:
     def __init__(self, inputFolderName):
         self.inputFolderName = inputFolderName
     def run(self):
-        client = MongoClient('163.143.165.128',27017)
+        client = MongoClient()
         db = client["airPollution"]
         collection = db["sensorData"]
 
