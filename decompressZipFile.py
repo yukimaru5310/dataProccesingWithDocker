@@ -1,4 +1,4 @@
-import DownloadZipfileFromURL
+import downloadZipFileFromURL
 import zipfile
 import os
 from glob import glob
@@ -15,6 +15,7 @@ class decompressZipFile:
         return self.outputFolder
 
     def run(self):
+        print(self.inputFile)
         with zipfile.ZipFile(self.inputFile, 'r') as zip_ref:
             zip_ref.extractall(self.outputFolder)
             zFiles = glob(os.path.join(self.outputFolder, '*.zip'))
@@ -29,5 +30,5 @@ class decompressZipFile:
             if os.path.isdir(p):
                 shutil.rmtree(p)
 if __name__ == '__main__':
-    obj = decompressZipFile(DownloadZipfileFromURL.obj.getFileName())
+    obj = decompressZipFile("dataproccesingWithDocker/201901_00.zip","testFolder")
     obj.run()
