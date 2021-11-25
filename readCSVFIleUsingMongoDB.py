@@ -6,72 +6,39 @@ from os import listdir
 from os.path import isfile, join
 from pymongo import MongoClient
 
-
 class readCSVFile:
     def __init__(self, inputFolderName):
         self.inputFolderName = inputFolderName
     def run(self):
-        client = MongoClient()
-        db = client["airPollution"]
-        collection = db["sensorData"]
-
-        self.enterDir(self.inputFolderName)
+        client = MongoClient("mongodb://localhost:30000/?retryWrites=false")
+        db = client["DataMining"]
+        collection = db["US_airPollution_PM25"]
         onlyfiles = [f for f in listdir(self.inputFolderName) if isfile(join(self.inputFolderName, f))]
         for file in onlyfiles:
+            query=[]
+            print(file)
+            cnt=0
             file = self.inputFolderName +"/"+file
-
-            f = csv.reader(file, delimiter=',', doublequote=True, lineterminator="\r\n", quotechar='"',
-                           skipinitialspace=True)
-        #header = next(f)
-        #print(header)
+            csv_file = open(file, encoding="cp932", errors="",newline="")
+            lines = csv.DictReader(csv_file, delimiter=',', skipinitialspace=True)
+            #header = next(f)
+            #print(header)
         # read database configuration
-
-            for row in f:
-                for i in range(len(row)):
-                    if row[i] == '':
-                        row[i] = '-1'
-                query = {'sensorID': row[0],
-                         'date': row[1],
-                         'time': '\'' + row[2] + '\'' + ':00:00',
-                         'SO2': row[3],
-                         'NO': row[4],
-                         'NO2': row[5],
-                         'NOx': row[6],
-                         'CO': row[7],
-                         'Ox': row[8],
-                         'NMHC': row[9],
-                         'CH4': row[10],
-                         'THC': row[11],
-                         'SPN': row[12],
-                         'PM2.5': row[13],
-                         'SP': row[14],
-                         'WD': '-1',
-                         'WS': row[16],
-                         'TEMP': row[17],
-                         'HUM': row[18]
-                         }
-
-                collection.insert_one(query)
-
+            for line in lines:
+                for index in line:
+                    if line[index] == '':
+                        line[index] = '-1'
+                query.append(line)
+                if len(query)==100000:
+                    cnt+=len(query)
+                    collection.insert_many(query)
+                    query=[]
+            cnt+=len(query)
+            print(cnt)
+            collection.insert_many(query)
     # close communication with the database
         client.close()
 
-
-
-    '''If the desired csv file already exists, load the CSV file as is and exit.
-    Otherwise, it will create a directory on the received path and move the csv file to it.'''
-    def enterDir(self,path):
-        if not os.path.exists(path):
-            os.makedirs(path)
-            for p in range(1,48):
-                if p < 10:
-                    for f in glob('0'+str(p)+'/*.csv', recursive=True):
-                        shutil.move(f, path)
-                else:
-                    for f in glob(str(p)+'/*.csv',recursive=True):
-                        shutil.move(f, path)
-
-
 if __name__ == '__main__':
-    obj = readCSVFile('station_info.csv')
+    obj = readCSVFile('../../Data/US_airPollution_PM25')
     obj.run()
